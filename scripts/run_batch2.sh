@@ -14,22 +14,22 @@ echo "=== Batch 2: Starting 4 experiments in parallel ==="
 echo "Max samples per experiment: $MAX_SAMPLES"
 echo "Start time: $(date)"
 
-# Exp-A: DeepMimic walk WITHOUT pose termination — ablation
+# Exp-A: DeepMimic spinkick WITHOUT pose termination — ablation
 CUDA_VISIBLE_DEVICES=0 python mimickit/run.py \
     --mode train \
     --num_envs $NUM_ENVS \
     --engine_config $ENGINE \
-    --env_config data/envs/expa_dm_walk_no_pose_term.yaml \
+    --env_config data/envs/expa_dm_spinkick_no_pose_term.yaml \
     --agent_config data/agents/deepmimic_humanoid_ppo_agent.yaml \
     --devices cuda:0 \
     --visualize false \
     --logger tb \
     --rand_seed $SEED \
     --max_samples $MAX_SAMPLES \
-    --out_dir output/expa_dm_walk_no_pose_term \
-    > output/expa_dm_walk_no_pose_term.log 2>&1 &
+    --out_dir output/expa_dm_spinkick_no_pose_term \
+    > output/expa_dm_spinkick_no_pose_term.log 2>&1 &
 PID1=$!
-echo "Exp-A (DM walk no pose term) started on GPU 0, PID=$PID1"
+echo "Exp-A (DM spinkick no pose term) started on GPU 0, PID=$PID1"
 
 # Exp5a: DM × diverse motions (walk+spinkick+dance) — DM multi-skill
 CUDA_VISIBLE_DEVICES=1 python mimickit/run.py \

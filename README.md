@@ -26,7 +26,7 @@ Batch 1 — DM vs AMP 基础对比 (4 GPUs, ~4h)
   Exp4   AMP × spinkick         — AMP dynamic motion
 
 Batch 2 — 消融 + 多技能 + 任务扩展 (4 GPUs, ~4h)
-  Exp-A  DM walk (no pose term) — DM ablation: termination effect
+  Exp-A  DM spinkick (no pose term) — DM ablation: termination effect
   Exp5a  DM × diverse           — DM multi-skill
   Exp5c  AMP × diverse          — AMP multi-skill (same dataset)
   Exp6   AMP + steering         — AMP task extension

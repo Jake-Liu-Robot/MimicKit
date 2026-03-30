@@ -18,7 +18,7 @@ Batch 1 (4 GPUs, ~4h): DM vs AMP 基础对比
   GPU 3: Exp4    AMP × spinkick         — AMP 动态动作
 
 Batch 2 (4 GPUs, ~4h): 消融 + 多技能 + 任务扩展
-  GPU 0: Exp-A   DM walk 无 pose term   — DM 消融: termination 的作用
+  GPU 0: Exp-A   DM spinkick 无 pose term — DM 消融: termination 的作用
   GPU 1: Exp5a   DM × diverse           — DM 多技能
   GPU 2: Exp5c   AMP × diverse          — AMP 多技能 (同数据集)
   GPU 3: Exp6    AMP + steering          — AMP 任务扩展
@@ -51,9 +51,10 @@ AMP defaults + `motion_file: humanoid_walk.pkl` + `log_tracking_error: True`
 ### Exp4: data/envs/exp4_amp_spinkick.yaml
 Same as Exp3, `motion_file: humanoid_spinkick.pkl`
 
-### Exp-A: data/envs/expa_dm_walk_no_pose_term.yaml
-**Ablation**: Exp1 with `pose_termination: False` (all other params identical)
-- Tests whether pose termination is critical for DM convergence
+### Exp-A: data/envs/expa_dm_spinkick_no_pose_term.yaml
+**Ablation**: Exp2 with `pose_termination: False` (all other params identical)
+- Uses spinkick (high-dynamic motion) for more visible ablation effect
+- Compares against Exp2 (DM spinkick with pose termination)
 
 ### Exp5a: data/envs/exp5a_dm_diverse.yaml
 DeepMimic + `motion_file: exp5_diverse_motions.yaml` (walk + spinkick + dance)
@@ -133,11 +134,11 @@ C. Visual (--visualize true):
 
 ### After Batch 2: 消融 + 多技能 + 任务扩展
 
-D. Ablation — Exp1 vs Exp-A:
-   - [ ] Does DM still converge without pose termination?
-   - [ ] Convergence speed difference?
-   - [ ] Final tracking error difference?
-   - [ ] Compare Exp-A tracking error to Exp3 — does gap narrow?
+D. Ablation — Exp2 vs Exp-A (spinkick with/without pose termination):
+   - [ ] Does DM still converge on spinkick without pose termination?
+   - [ ] Does the agent find "lazy" solutions (partial kick, avoids hard parts)?
+   - [ ] Convergence speed and final tracking error difference?
+   - [ ] Compare Exp-A tracking error to Exp4 (AMP spinkick) — does gap narrow?
 
 E. Multi-skill — Exp5a vs Exp5c:
    - [ ] Exp5a: does DM learn all 3 motions or compromise?
