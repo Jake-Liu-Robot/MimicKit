@@ -111,12 +111,128 @@ Exp6:                      data/agents/amp_task_humanoid_agent.yaml       (AMP, 
 
 ---
 
-## Training Commands
+## Execution
 
-Common args: `--num_envs 4096 --rand_seed 42 --max_samples 500000000 --logger tb --visualize false`
+### Step 1: Server Setup
+
+```bash
+ssh <runpod-server>
+# Upload project (scp/rsync) or git clone
+cd MimicKit
+bash scripts/setup_server.sh
+```
+
+### Step 2: Training
+
+```bash
+conda activate mimickit
+mkdir -p output
+
+# Batch 1: DM vs AMP (4 GPUs, ~4h)
+bash scripts/run_batch1.sh
+
+# Batch 2: Ablation + Multi-skill + Task (4 GPUs, ~4h)
+bash scripts/run_batch2.sh
+
+# Batch 3: ASE (1 GPU, ~4h, can run during Batch 1/2 on free GPU)
+bash scripts/run_batch3.sh
+```
+
+Common training args: `--num_envs 4096 --rand_seed 42 --max_samples 500000000 --logger tb --visualize false`
 GPU isolation: `CUDA_VISIBLE_DEVICES=N` + `--devices cuda:0`
 
-See `scripts/run_batch1.sh` and `scripts/run_batch2.sh` for full commands.
+### Step 3: Monitoring
+
+```bash
+# Real-time log
+tail -f output/exp1_dm_walk.log
+
+# TensorBoard (all experiments)
+tensorboard --logdir=output --port=6006 --bind_all
+```
+
+### Step 4: Testing
+
+```bash
+# Run all tests (serial, ~30min)
+bash scripts/run_tests.sh
+```
+
+### Step 5: Visualization (local with display)
+
+```bash
+# Visualize specific model
+python mimickit/run.py --mode test --num_envs 4 --visualize true \
+  --engine_config data/engines/isaac_gym_engine.yaml \
+  --env_config data/envs/exp1_dm_walk.yaml \
+  --agent_config data/agents/deepmimic_humanoid_ppo_agent.yaml \
+  --model_file output/exp1_dm_walk/model.pt
+```
+
+### Step 6: Download Results
+
+```bash
+# Download output directory from server
+scp -r <server>:MimicKit/output ./output
+# View locally
+tensorboard --logdir=output --port=6006
+```
+
+---
+
+## Output Data
+
+### Training Output (per experiment)
+
+```
+output/{exp_name}/
+├── model.pt                      # Final trained model
+├── log.txt                       # All metrics (space-delimited text)
+├── events.out.tfevents.*         # TensorBoard event files
+├── engine_config.yaml            # Saved engine config
+├── env_config.yaml               # Saved env config
+└── agent_config.yaml             # Saved agent config
+```
+
+### Metrics by Algorithm
+
+| Metric | PPO (DM) | AMP | ASE | Collection |
+|--------|----------|-----|-----|------------|
+| Test_Return | ✓ | ✓ | ✓ | 0_Main |
+| Train_Return | ✓ | ✓ | ✓ | 0_Main |
+| Episode_Length | ✓ | ✓ | ✓ | 1_Info |
+| Samples | ✓ | ✓ | ✓ | 1_Info |
+| actor_loss | ✓ | ✓ | ✓ | 3_Loss |
+| critic_loss | ✓ | ✓ | ✓ | 3_Loss |
+| clip_frac | ✓ | ✓ | ✓ | 3_Loss |
+| disc_loss | | ✓ | ✓ | 3_Loss |
+| disc_agent_acc | | ✓ | ✓ | 3_Loss |
+| disc_demo_acc | | ✓ | ✓ | 3_Loss |
+| disc_reward_mean | | ✓ | ✓ | 3_Loss |
+| enc_loss | | | ✓ | 3_Loss |
+| enc_reward_mean | | | ✓ | 3_Loss |
+| diversity_loss | | | ✓ | 3_Loss |
+| root_pos_err | ✓ | ✓ | ✓ | 2_Env |
+| root_rot_err | ✓ | ✓ | ✓ | 2_Env |
+| body_pos_err | ✓ | ✓ | ✓ | 2_Env |
+| body_rot_err | ✓ | ✓ | ✓ | 2_Env |
+| dof_vel_err | ✓ | ✓ | ✓ | 2_Env |
+| root_vel_err | ✓ | ✓ | ✓ | 2_Env |
+| root_ang_vel_err | ✓ | ✓ | ✓ | 2_Env |
+
+### Test Output
+
+`bash scripts/run_tests.sh` outputs test results to `output/{exp_name}/test_results.txt`:
+- Test_Return (mean over 32 episodes)
+- Test_Episode_Length
+- 7 tracking error metrics (if log_tracking_error=True)
+
+### Key Notes on Metrics
+
+- **AMP Test_Return=0.0 for Exp3/4/5c is NORMAL**: task_reward_weight=0.0, reward comes from discriminator only
+- **AMP disc_reward_mean** is the actual training signal — use this instead of Test_Return
+- **Tracking errors** are logged for ALL experiments (all configs have log_tracking_error=True)
+- **TensorBoard collections**: 0_Main (primary), 1_Info (metadata), 2_Env (tracking errors), 3_Loss (losses)
 
 ---
 

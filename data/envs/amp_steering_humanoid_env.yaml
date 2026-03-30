@@ -11,6 +11,7 @@ enable_phase_obs: False
 enable_tar_obs: False
 num_disc_obs_steps: 10
 rand_reset: True
+log_tracking_error: True
 
 ref_char_offset: [2.0, 0.0, 0.0] # m
 init_pose: [0, 0, 0.882416, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.5708, 0, 0, 0, -1.5708, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
