@@ -100,5 +100,16 @@ python mimickit/run.py --mode test --num_envs $NUM_ENVS \
     --test_episodes $TEST_EPS \
     2>&1 | tee output/exp6_amp_steer/test_results.txt
 
+# Exp5b: ASE diverse
+echo "--- Testing Exp5b (ASE diverse) ---"
+python mimickit/run.py --mode test --num_envs $NUM_ENVS \
+    --engine_config $ENGINE \
+    --env_config data/envs/exp5b_ase_diverse.yaml \
+    --agent_config data/agents/ase_humanoid_agent.yaml \
+    --devices cuda:0 --visualize false \
+    --model_file output/exp5b_ase_diverse/model.pt \
+    --test_episodes $TEST_EPS \
+    2>&1 | tee output/exp5b_ase_diverse/test_results.txt
+
 echo ""
 echo "=== All tests complete: $(date) ==="

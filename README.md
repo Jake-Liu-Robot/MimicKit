@@ -13,7 +13,7 @@ This project systematically compares two motion imitation paradigms through cont
 |----------|-----------|
 | DM vs AMP: precision vs robustness tradeoff? | Exp1-4 (walk & spinkick) |
 | How critical is pose termination for DM? | Exp-A (ablation) |
-| DM vs AMP on multi-skill learning? | Exp5a vs Exp5c (same dataset) |
+| DM vs AMP vs ASE on multi-skill? | Exp5a vs Exp5c vs Exp5b (same dataset) |
 | Can AMP prior transfer to downstream tasks? | Exp6 (steering) |
 
 ## Experiment Matrix
@@ -30,6 +30,9 @@ Batch 2 — 消融 + 多技能 + 任务扩展 (4 GPUs, ~4h)
   Exp5a  DM × diverse           — DM multi-skill
   Exp5c  AMP × diverse          — AMP multi-skill (same dataset)
   Exp6   AMP + steering         — AMP task extension
+
+Batch 3 — ASE 多技能 (1 GPU, ~4h)
+  Exp5b  ASE × diverse          — multi-modal policy (latent z)
 ```
 
 ## Quick Start

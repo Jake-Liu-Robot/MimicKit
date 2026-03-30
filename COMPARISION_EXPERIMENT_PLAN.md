@@ -2,8 +2,8 @@
 
 ## Overview
 
-8 experiments, 2 batches, 4 GPUs parallel per batch.
-RunPod: 4x RTX 4090. Total wall time ~8h. Total cost ~$25.
+9 experiments, 3 batches, 4 GPUs parallel per batch.
+RunPod: 4x RTX 4090. Total wall time ~12h. Total cost ~$35.
 max_samples=500M per experiment (~3-4h on 4090 with 4096 envs).
 
 ---
@@ -22,6 +22,9 @@ Batch 2 (4 GPUs, ~4h): 消融 + 多技能 + 任务扩展
   GPU 1: Exp5a   DM × diverse           — DM 多技能
   GPU 2: Exp5c   AMP × diverse          — AMP 多技能 (同数据集)
   GPU 3: Exp6    AMP + steering          — AMP 任务扩展
+
+Batch 3 (1 GPU, ~4h): ASE 多技能
+  GPU 0: Exp5b   ASE × diverse          — 多模态策略 (latent z) 多技能
 ```
 
 ### Analysis Structure
@@ -29,8 +32,8 @@ Batch 2 (4 GPUs, ~4h): 消融 + 多技能 + 任务扩展
 ```
 Layer 1 (Exp1-4):   DM vs AMP — 相同动作上的表现差异
 Layer 2 (Exp-A):    消融 — pose termination 对 DM 的影响
-Layer 3 (Exp5a/5c): 多技能 — DM vs AMP 处理多动作数据集的能力
-Layer 4 (Exp6):     任务扩展 — AMP 判别器先验 + 下游任务奖励
+Layer 3 (Exp5a/5c/5b): 多技能三方对比 — 单高斯+跟踪 vs 单高斯+判别器 vs 多模态+判别器
+Layer 4 (Exp6):        任务扩展 — AMP 判别器先验 + 下游任务奖励
 ```
 
 ---
@@ -63,6 +66,12 @@ DeepMimic + `motion_file: exp5_diverse_motions.yaml` (walk + spinkick + dance)
 AMP + `motion_file: exp5_diverse_motions.yaml` (same dataset as Exp5a)
 - Clean comparison: same data, different method
 
+### Exp5b: data/envs/exp5b_ase_diverse.yaml
+ASE + `motion_file: exp5_diverse_motions.yaml` (same dataset as Exp5a/5c)
+- Latent z (64-dim) conditions policy → multi-modal output
+- 3-way comparison: DM (5a) vs AMP (5c) vs ASE (5b)
+- Note: ASE normalizer_samples=500M, may need >500M for full convergence
+
 ### Exp6: data/envs/amp_steering_humanoid_env.yaml (existing)
 AMP + steering task + `dataset_humanoid_locomotion.yaml`
 
@@ -84,6 +93,7 @@ motions:
 ```
 Exp1, Exp2, Exp-A, Exp5a:  data/agents/deepmimic_humanoid_ppo_agent.yaml  (PPO, SGD 1e-4)
 Exp3, Exp4, Exp5c:         data/agents/amp_humanoid_agent.yaml            (AMP, task_w=0.0, disc_w=1.0)
+Exp5b:                     data/agents/ase_humanoid_agent.yaml            (ASE, Adam 2e-5, latent_dim=64)
 Exp6:                      data/agents/amp_task_humanoid_agent.yaml       (AMP, task_w=0.5, disc_w=0.5)
 ```
 
@@ -140,11 +150,13 @@ D. Ablation — Exp2 vs Exp-A (spinkick with/without pose termination):
    - [ ] Convergence speed and final tracking error difference?
    - [ ] Compare Exp-A tracking error to Exp4 (AMP spinkick) — does gap narrow?
 
-E. Multi-skill — Exp5a vs Exp5c:
-   - [ ] Exp5a: does DM learn all 3 motions or compromise?
-   - [ ] Exp5c: does AMP discriminator cover all 3 motion styles?
-   - [ ] Compare Exp5a tracking error vs Exp1 (single clip degradation)
-   - [ ] Compare Exp5c quality vs Exp3 (single clip degradation)
+E. Multi-skill 3-way — Exp5a vs Exp5c vs Exp5b:
+   - [ ] Exp5a (DM): does it learn all 3 motions or compromise?
+   - [ ] Exp5c (AMP): does discriminator cover all 3 styles? Any mode collapse?
+   - [ ] Exp5b (ASE): do different latent z produce different motions?
+   - [ ] Compare degradation: Exp5a vs Exp1, Exp5c vs Exp3
+   - [ ] Key question: if Exp5c degrades but Exp5b doesn't → bottleneck is policy (single-mode)
+   - [ ] Key question: if Exp5c also works → AMP discriminator gives enough slack for single-mode policy
 
 F. Task extension — Exp6:
    - [ ] Does AMP produce natural locomotion while following steering commands?
@@ -184,6 +196,7 @@ bash scripts/setup_server.sh
 conda activate mimickit
 bash scripts/run_batch1.sh   # ~4h
 bash scripts/run_batch2.sh   # ~4h
+bash scripts/run_batch3.sh   # ~4h (can overlap with batch1/2 on free GPU)
 bash scripts/run_tests.sh    # ~30min
 # 5. TensorBoard
 tensorboard --logdir=output --port=6006 --bind_all
