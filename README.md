@@ -96,23 +96,10 @@ python mimickit/run.py --mode test --num_envs 4 --visualize true \
 - **Tracking error** (7 metrics): root_pos_err, root_rot_err, body_pos_err, body_rot_err, dof_vel_err, root_vel_err, root_ang_vel_err
 - **Qualitative**: visual comparison with reference motions
 
-## Project Structure
+## Documentation
 
-```
-├── mimickit/              # Core framework
-│   ├── run.py             # Entry point
-│   ├── envs/              # DeepMimic, AMP, ASE, ADD environments
-│   ├── learning/          # PPO, AMP, ASE, AWR agents & models
-│   ├── engines/           # IsaacGym / IsaacLab / Newton backends
-│   └── anim/              # Motion data & character models
-├── data/
-│   ├── envs/              # Experiment environment configs (exp1-8)
-│   ├── agents/            # Algorithm hyperparameter configs
-│   └── motions/           # Motion capture data (.pkl)
-├── scripts/               # Batch training & evaluation scripts
-├── COMPARISION_EXPERIMENT_PLAN.md  # Detailed experiment plan
-└── CLAUDE.md              # Codebase guide for AI assistance
-```
+- **`COMPARISION_EXPERIMENT_PLAN.md`** — Detailed configs, execution steps, output data format, analysis checklist
+- **`CLAUDE.md`** — Codebase architecture guide (for AI assistance)
 
 ## References
 

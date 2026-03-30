@@ -1,8 +1,6 @@
-# MimicKit - Motion Imitation RL Framework
+# MimicKit - Codebase Guide (for AI assistance)
 
-## Project Overview
-
-Fork of [xbpeng/MimicKit](https://github.com/xbpeng/MimicKit) for studying and comparing motion imitation methods — primarily **DeepMimic** and **AMP**.
+> See `README.md` for project overview. See `COMPARISION_EXPERIMENT_PLAN.md` for experiment details.
 
 ## Architecture
 
@@ -30,41 +28,19 @@ mimickit/
 
 ## Key Concepts
 
-- **Engine**: Simulator backend abstraction. Configured via `data/engines/*.yaml`. Controls physics frequency, control mode, etc.
-- **Environment**: Task definition. Configured via `data/envs/*.yaml`. Defines observation space, reward, termination.
-- **Agent**: RL algorithm + model. Configured via `data/agents/*.yaml`. Defines network architecture, optimizer, hyperparameters.
-- **Motion**: `.pkl` files with pose frames `[root_pos(3), root_rot(3 exp-map), joint_dofs...]`. Managed by MotionLib.
-
-## Training Command Pattern
-
-```bash
-python mimickit/run.py \
-  --mode train \
-  --num_envs 4096 \
-  --engine_config data/engines/isaac_gym_engine.yaml \
-  --env_config data/envs/<env>.yaml \
-  --agent_config data/agents/<agent>.yaml \
-  --devices cuda:0 --visualize false --logger tb \
-  --out_dir output/<experiment_name>
-```
-
-Or use arg files: `python mimickit/run.py --arg_file args/<args>.txt`
-
-## Experiment Plan
-
-See `COMPARISION_EXPERIMENT_PLAN.md` for the full 8-experiment comparison:
-- **Batch 1** (Exp1-4): DeepMimic vs AMP on walk/spinkick
-- **Batch 2** (Exp5-8): Multi-skill (DM vs ASE), task extension (steering, location)
-- Scripts: `scripts/run_batch1.sh`, `scripts/run_batch2.sh`, `scripts/run_tests.sh`
+- **Engine**: Simulator backend. Config: `data/engines/*.yaml`. Controls physics freq, control mode.
+- **Environment**: Task definition. Config: `data/envs/*.yaml`. Defines obs space, reward, termination.
+- **Agent**: RL algorithm + model. Config: `data/agents/*.yaml`. Defines network, optimizer, hyperparams.
+- **Motion**: `.pkl` files with pose frames `[root_pos(3), root_rot(3 exp-map), joint_dofs...]`.
 
 ## Code Conventions
 
 - All configs are YAML. Args can be CLI or `--arg_file`.
-- Factory pattern everywhere: `env_builder.build_env()`, `agent_builder.build_agent()`, `engine_builder.build_engine()`.
-- Environment class names map to `env_name` field in YAML configs.
-- Agent class names map to `agent_name` field in YAML configs.
+- Factory pattern: `env_builder.build_env()`, `agent_builder.build_agent()`, `engine_builder.build_engine()`.
+- `env_name` in YAML maps to environment class. `agent_name` maps to agent class.
 - Distributed training: `--devices cuda:0 cuda:1` spawns one process per device.
 - `output/` is gitignored. Training artifacts go there.
+- `data/motions/` and `data/assets/` are gitignored (large binary files).
 
 ## Dependencies
 
