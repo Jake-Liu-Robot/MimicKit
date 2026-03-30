@@ -12,25 +12,24 @@ This project systematically compares two motion imitation paradigms through cont
 | Question | Experiment |
 |----------|-----------|
 | DM vs AMP: precision vs robustness tradeoff? | Exp1-4 (walk & spinkick) |
-| DM limitation on multi-skill learning? | Exp5a (DM diverse) |
-| AMP prior reusability across tasks? | Exp6/8 (steering & location) |
-| What role does early termination play in DM? | Ablation (planned) |
-| How critical is phase observation for DM? | Ablation (planned) |
+| How critical is pose termination for DM? | Exp-A (ablation) |
+| DM vs AMP on multi-skill learning? | Exp5a vs Exp5c (same dataset) |
+| Can AMP prior transfer to downstream tasks? | Exp6 (steering) |
 
 ## Experiment Matrix
 
 ```
-Batch 1 — Core DM vs AMP (4 GPUs, ~4h)
-  Exp1   DeepMimic × walk         — tracking baseline
-  Exp2   DeepMimic × spinkick     — tracking on dynamic motion
-  Exp3   AMP × walk               — distribution matching baseline
-  Exp4   AMP × spinkick           — AMP robustness test
+Batch 1 — DM vs AMP 基础对比 (4 GPUs, ~4h)
+  Exp1   DM × walk              — DM baseline
+  Exp2   DM × spinkick          — DM dynamic motion
+  Exp3   AMP × walk             — AMP baseline
+  Exp4   AMP × spinkick         — AMP dynamic motion
 
-Batch 2 — Multi-skill & Task Extension (4 GPUs, ~5h)
-  Exp5a  DeepMimic × diverse      — DM multi-skill (expected: degrade)
-  Exp6   AMP + steering           — gait switching emergence
-  Exp8   AMP + location           — same prior, different task
-  TBD    Ablation experiments     — isolate key DM/AMP design choices
+Batch 2 — 消融 + 多技能 + 任务扩展 (4 GPUs, ~4h)
+  Exp-A  DM walk (no pose term) — DM ablation: termination effect
+  Exp5a  DM × diverse           — DM multi-skill
+  Exp5c  AMP × diverse          — AMP multi-skill (same dataset)
+  Exp6   AMP + steering         — AMP task extension
 ```
 
 ## Quick Start

@@ -56,6 +56,17 @@ python mimickit/run.py --mode test --num_envs $NUM_ENVS \
     --test_episodes $TEST_EPS \
     2>&1 | tee output/exp4_amp_spinkick/test_results.txt
 
+# Exp-A: DM walk no pose termination
+echo "--- Testing Exp-A (DM walk no pose term) ---"
+python mimickit/run.py --mode test --num_envs $NUM_ENVS \
+    --engine_config $ENGINE \
+    --env_config data/envs/expa_dm_walk_no_pose_term.yaml \
+    --agent_config data/agents/deepmimic_humanoid_ppo_agent.yaml \
+    --devices cuda:0 --visualize false \
+    --model_file output/expa_dm_walk_no_pose_term/model.pt \
+    --test_episodes $TEST_EPS \
+    2>&1 | tee output/expa_dm_walk_no_pose_term/test_results.txt
+
 # Exp5a: DM diverse
 echo "--- Testing Exp5a (DM diverse) ---"
 python mimickit/run.py --mode test --num_envs $NUM_ENVS \
@@ -67,16 +78,16 @@ python mimickit/run.py --mode test --num_envs $NUM_ENVS \
     --test_episodes $TEST_EPS \
     2>&1 | tee output/exp5a_dm_diverse/test_results.txt
 
-# Exp5b: ASE diverse
-echo "--- Testing Exp5b (ASE diverse) ---"
+# Exp5c: AMP diverse
+echo "--- Testing Exp5c (AMP diverse) ---"
 python mimickit/run.py --mode test --num_envs $NUM_ENVS \
     --engine_config $ENGINE \
-    --env_config data/envs/exp5b_ase_diverse.yaml \
-    --agent_config data/agents/ase_humanoid_agent.yaml \
+    --env_config data/envs/exp5c_amp_diverse.yaml \
+    --agent_config data/agents/amp_humanoid_agent.yaml \
     --devices cuda:0 --visualize false \
-    --model_file output/exp5b_ase_diverse/model.pt \
+    --model_file output/exp5c_amp_diverse/model.pt \
     --test_episodes $TEST_EPS \
-    2>&1 | tee output/exp5b_ase_diverse/test_results.txt
+    2>&1 | tee output/exp5c_amp_diverse/test_results.txt
 
 # Exp6: AMP steering
 echo "--- Testing Exp6 (AMP steering) ---"
@@ -88,17 +99,6 @@ python mimickit/run.py --mode test --num_envs $NUM_ENVS \
     --model_file output/exp6_amp_steer/model.pt \
     --test_episodes $TEST_EPS \
     2>&1 | tee output/exp6_amp_steer/test_results.txt
-
-# Exp8: AMP location
-echo "--- Testing Exp8 (AMP location) ---"
-python mimickit/run.py --mode test --num_envs $NUM_ENVS \
-    --engine_config $ENGINE \
-    --env_config data/envs/amp_location_humanoid_env.yaml \
-    --agent_config data/agents/amp_task_humanoid_agent.yaml \
-    --devices cuda:0 --visualize false \
-    --model_file output/exp8_amp_location/model.pt \
-    --test_episodes $TEST_EPS \
-    2>&1 | tee output/exp8_amp_location/test_results.txt
 
 echo ""
 echo "=== All tests complete: $(date) ==="
