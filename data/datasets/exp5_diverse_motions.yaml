@@ -1,0 +1,7 @@
+motions:
+  - file: "data/motions/humanoid/humanoid_walk.pkl"
+    weight: 1.0
+  - file: "data/motions/humanoid/humanoid_spinkick.pkl"
+    weight: 1.0
+  - file: "data/motions/humanoid/humanoid_dance_a.pkl"
+    weight: 1.0
