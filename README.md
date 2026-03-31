@@ -208,20 +208,32 @@ output/{exp_name}/
 
 ### Batch 1: DM vs AMP 基础对比
 
-- [ ] Exp1 vs Exp3: return curves + tracking error (walk)
-- [ ] Exp2 vs Exp4: return curves + tracking error (spinkick)
+- [x] Exp1 vs Exp3: return curves + tracking error (walk) — DM 追踪精度优 3-284×
+- [x] Exp2 vs Exp4: return curves + tracking error (spinkick) — DM 全面领先，AMP Disc_Reward 更高
 - [ ] Visual: DM overlaps reference? AMP similar style but own rhythm?
 
 ### Batch 2: 消融 + 多技能 + 任务扩展
 
-- [ ] **Exp2 vs Exp-A**: DM convergence without pose termination? Lazy solutions?
-- [ ] **Exp-A vs Exp4**: Does gap between DM(no term) and AMP narrow?
-- [ ] **Exp5a (DM) vs Exp5c (AMP) vs Exp5b (ASE)**: Multi-skill 3-way comparison
-- [ ] If Exp5c degrades but Exp5b doesn't → bottleneck is single-mode policy
-- [ ] If Exp5c also works → AMP discriminator gives enough slack
-- [ ] **Exp6**: Natural locomotion + steering? Gait emergence (slow→walk, fast→run)?
+- [x] **Exp2 vs Exp-A**: DM convergence without pose termination? — 最终性能差 <1%，主要加速早期收敛
+- [x] **Exp-A vs Exp4**: Does gap between DM(no term) and AMP narrow? — DM 仍优 14-52×，精度来自奖励设计而非 termination
+- [x] **Exp5a (DM) vs Exp5c (AMP) vs Exp5b (ASE)**: Multi-skill 3-way comparison — DM 追踪最优，ASE 编码器收敛但多样性不足
+- [x] ASE Diversity_Loss=0.96（未收敛），500M 样本不够 → 需 >1B 样本验证多模态优势
+- [x] AMP diverse Disc_Reward=0.991 虚高，判别器决策边界被多动作模糊化
+- [x] **Exp6**: AMP 先验成功迁移到 steering 任务，存在 task-style trade-off
+- [ ] Exp6 gait emergence visualization (slow→walk, fast→run)
 
 ---
+
+## Key Results
+
+> Full analysis with formulas and data tables: [`docs/experiment_analysis.md`](docs/experiment_analysis.md)
+
+| Research Question | Finding |
+|-------------------|---------|
+| DM vs AMP precision? | DM tracking error 3-284× lower; AMP global drift is by design |
+| Pose termination critical? | <1% final performance impact; mainly accelerates early convergence |
+| Multi-skill (DM/AMP/ASE)? | DM best tracking; ASE encoder converges but diversity insufficient at 500M samples |
+| AMP prior transfer? | Successfully transfers to steering; task-style trade-off observed |
 
 ## Known Limitations
 
@@ -229,7 +241,7 @@ output/{exp_name}/
 2. No terrain/obstacle experiments
 3. Exp5a vs Exp5c is method-level comparison, not single-variable ablation
 4. Only one DM ablation (pose termination)
-5. ASE may need >500M samples for full convergence
+5. ASE Diversity_Loss=0.96 at 500M samples — needs >1B for full convergence
 
 ## Future Work
 
