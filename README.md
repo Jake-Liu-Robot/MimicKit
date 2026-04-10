@@ -154,21 +154,54 @@ tail -f output/exp1_dm_walk.log                        # Real-time log
 tensorboard --logdir=output --port=6006 --bind_all     # TensorBoard
 ```
 
-### Step 4: Testing
+### Step 4: Testing & Tracking Error Evaluation
+
+训练期间 AMP/ASE 的 tracking error 日志存在 bug（已修复于 `amp_env.py:183-186`），
+因此使用独立评估脚本重新计算所有实验的追踪误差。
+评估配置：4096 episodes × 3 seeds (42, 123, 456)，统一 `pose_termination=False`。
 
 ```bash
-bash scripts/run_tests.sh   # All 9 experiments, serial, ~30min
+# 评估所有实验（3 seeds × 4096 episodes each）
+bash scripts/run_tracking_error_test.sh
+
+# 或只评估特定实验
+bash scripts/run_tracking_error_test.sh exp3 exp4 exp5b exp5c exp6
+
+# 或单独运行
+python mimickit/eval_tracking_error.py \
+  --env_config output/exp3_amp_walk/env_config.yaml \
+  --agent_config output/exp3_amp_walk/agent_config.yaml \
+  --engine_config output/exp3_amp_walk/engine_config.yaml \
+  --model_file output/exp3_amp_walk/model.pt \
+  --num_envs 4096 --test_episodes 4096 --rand_seeds 42 123 456 \
+  --devices cuda:0 --out_file output/tracking_error_reeval/exp3_amp_walk.json
 ```
 
-### Step 5: Visualization
+结果输出到 `output/tracking_error_reeval/`（每个实验一个 JSON + 汇总 CSV）。
+
+### Step 5: Video Recording
 
 ```bash
+# 录制所有实验的视频（单动作 1 episode，多技能 6 episodes，steering 3 episodes）
+bash scripts/record_videos.sh
+
+# 或录制单个实验
+python mimickit/record_video.py \
+  --env_config output/exp1_dm_walk/env_config.yaml \
+  --agent_config output/exp1_dm_walk/agent_config.yaml \
+  --engine_config output/exp1_dm_walk/engine_config.yaml \
+  --model_file output/exp1_dm_walk/model.pt \
+  --test_episodes 1 --out_file output/videos/exp1_dm_walk.mp4
+
+# 实时可视化（需要显示器）
 python mimickit/run.py --mode test --num_envs 4 --visualize true \
   --engine_config data/engines/isaac_gym_engine.yaml \
   --env_config data/envs/exp1_dm_walk.yaml \
   --agent_config data/agents/deepmimic_humanoid_ppo_agent.yaml \
   --model_file output/exp1_dm_walk/model.pt
 ```
+
+视频说明见 [`output/videos/README.md`](output/videos/README.md)。
 
 ---
 
@@ -201,6 +234,7 @@ output/{exp_name}/
 **Notes:**
 - AMP `Test_Return=0.0` for Exp3/4/5c is **normal** (task_reward_weight=0.0). Use `disc_reward_mean` instead.
 - All experiments have `log_tracking_error: True`.
+- 训练日志中 AMP/ASE 的 tracking error 存在 bug（已修复），正式数据见 `output/tracking_error_reeval/`。
 
 ---
 
@@ -208,36 +242,55 @@ output/{exp_name}/
 
 ### Batch 1: DM vs AMP 基础对比
 
-- [x] Exp1 vs Exp3: return curves + tracking error (walk) — DM 追踪精度优 3-284×
-- [x] Exp2 vs Exp4: return curves + tracking error (spinkick) — DM 全面领先，AMP Disc_Reward 更高
-- [ ] Visual: DM overlaps reference? AMP similar style but own rhythm?
+- [x] Exp1 vs Exp3: return curves + tracking error (walk) — DM 局部姿态精度优 3.4-9.3×
+- [x] Exp2 vs Exp4: return curves + tracking error (spinkick) — DM 局部姿态精度优 2.4-5.1×
+- [x] Visual: DM 机械重复参考循环，AMP 风格近似但每次有细微差异
 
 ### Batch 2: 消融 + 多技能 + 任务扩展
 
 - [x] **Exp2 vs Exp-A**: DM convergence without pose termination? — 最终性能差 <1%，主要加速早期收敛
-- [x] **Exp-A vs Exp4**: Does gap between DM(no term) and AMP narrow? — DM 仍优 14-52×，精度来自奖励设计而非 termination
+- [x] **Exp-A vs Exp4**: Does gap between DM(no term) and AMP narrow? — DM 仍优，精度来自奖励设计而非 termination
 - [x] **Exp5a (DM) vs Exp5c (AMP) vs Exp5b (ASE)**: Multi-skill 3-way comparison — DM 追踪最优，ASE 编码器收敛但多样性不足
 - [x] ASE Diversity_Loss=0.96（未收敛），500M 样本不够 → 需 >1B 样本验证多模态优势
 - [x] AMP diverse Disc_Reward=0.991 虚高，判别器决策边界被多动作模糊化
 - [x] **Exp6**: AMP 先验成功迁移到 steering 任务，存在 task-style trade-off
-- [ ] Exp6 gait emergence visualization (slow→walk, fast→run)
+- [x] Exp6 视频录制：3 episodes，每 episode 内指令每 4-7s 切换一次
+
+### 追踪误差重评估
+
+- [x] 用 `eval_tracking_error.py` 重新评估全部 9 个实验（3 seeds × 4096 episodes，统一 `pose_termination=False`）
+- [x] 用重评估数据更新所有 tracking error 表格和倍数
 
 ---
 
 ## Key Results
 
 > Full analysis with formulas and data tables: [`docs/experiment_analysis.md`](docs/experiment_analysis.md)
+>
+> 追踪误差数据来自重评估（3 seeds × 4096 episodes，统一 pose_termination=False），见 `output/tracking_error_reeval/`。
+> DM 的奖励在世界坐标系中跟踪全局位置（track_root=True），AMP 不跟踪。
+> 因此 root_pos_err 对 DM 有天然优势，**局部姿态指标（body_pos/rot_err）是更公平的对比维度**。
 
 | Research Question | Finding |
 |-------------------|---------|
-| DM vs AMP precision? | DM tracking error 3-284× lower; AMP global drift is by design |
+| DM vs AMP precision? | DM 局部姿态精度优 2.4-9.3×（body_pos_err）；root_pos_err 差距更大但不公平（DM 直接优化） |
 | Pose termination critical? | <1% final performance impact; mainly accelerates early convergence |
-| Multi-skill (DM/AMP/ASE)? | DM best tracking; ASE encoder converges but diversity insufficient at 500M samples |
-| AMP prior transfer? | Successfully transfers to steering; task-style trade-off observed |
+| Multi-skill (DM/AMP/ASE)? | DM 是通用跟踪器（精确但被动），AMP 是风格生成器（灵活但不精确），ASE 未收敛（需 >500M 样本） |
+| AMP prior transfer? | 成功迁移到 steering 任务（episode 内每 4-7s 切换速度/方向指令），DM 无法做 steering（观测空间无命令输入） |
+
+### 方法论差异（视觉观察 + 数据验证）
+
+| 维度 | DeepMimic | AMP | ASE |
+|------|-----------|-----|-----|
+| 本质 | 被动跟踪器：跟踪循环播放的参考轨迹 | 主动生成器：每步根据当前状态自主决策 | 条件生成器：根据状态 + latent z 生成动作 |
+| 动作循环 | 强制循环（phase 取模） | 涌现循环（策略学到的行为） | 由 z 控制（理论上） |
+| Episode 内切换动作 | 不能（参考轨迹固定） | 不能（无选择机制） | 理论上能（换 z），实际未收敛 |
+| 响应外部命令 | 不能（观测无命令输入） | 能（如 steering） | 能（z 作为技能选择） |
+| 适用场景 | 精确动画回放 | 可控风格化运动 / 下游任务 | 多技能切换（需充足训练） |
 
 ## Known Limitations
 
-1. Single seed (42) per experiment
+1. ~~Single seed (42) per experiment~~ 训练单种子，评估已改为 3 seeds × 4096 episodes
 2. No terrain/obstacle experiments
 3. Exp5a vs Exp5c is method-level comparison, not single-variable ablation
 4. Only one DM ablation (pose termination)
@@ -247,7 +300,6 @@ output/{exp_name}/
 
 - DM target obs ablation / AMP disc_obs_steps ablation
 - Mixed disc + tracking rewards
-- Multi-seed validation
 - Terrain experiments
 
 ## References

@@ -2,6 +2,7 @@ import gymnasium.spaces as spaces
 import numpy as np
 import torch
 
+import envs.base_env as base_env
 import envs.deepmimic_env as deepmimic_env
 import util.circular_buffer as circular_buffer
 import util.torch_util as torch_util
@@ -180,7 +181,8 @@ class AMPEnv(deepmimic_env.DeepMimicEnv):
         return
     
     def _update_ref_motion(self):
-        if (self._enable_ref_char()):
+        if (self._enable_ref_char()
+            or (self._log_tracking_error and self._mode == base_env.EnvMode.TEST)):
             super()._update_ref_motion()
         return
     
